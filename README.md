@@ -38,4 +38,4 @@ API → fetch → clean → validate → store in PostgreSQL
 4. Create the database table
    python database.py
 5. Run the pipeline
-   python store.py
+   python store.
