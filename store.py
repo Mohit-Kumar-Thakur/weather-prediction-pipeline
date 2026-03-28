@@ -4,11 +4,19 @@ from models import WeatherData
 
 def store_weather_data(clean_df):
     db = SessionLocal()
-
     try:
         records_added = 0
 
         for _, row in clean_df.iterrows():
+
+            exists = db.query(WeatherData).filter(
+                WeatherData.time   == row['time'],
+                WeatherData.source == row['source']
+            ).first()
+
+            if exists:
+                continue
+
             record = WeatherData(
                 time                = row['time'],
                 temperature_c       = row.get('temperature_c'),
@@ -24,7 +32,7 @@ def store_weather_data(clean_df):
             records_added += 1
 
         db.commit()
-        print(f"Successfully stored {records_added} records into PostgreSQL!")
+        print(f"Successfully stored {records_added} new records into PostgreSQL!")
 
     except Exception as e:
         db.rollback()
