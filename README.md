@@ -7,7 +7,8 @@ a Machine Learning model served via a REST API.
 ---
 
 ## Live Demo
-> Deploy link will be added after Railway deployment
+> Live API: https://weather-prediction-pipeline.onrender.com
+> API Docs: https://weather-prediction-pipeline.onrender.com/docs
 
 ---
 
