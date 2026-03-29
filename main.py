@@ -4,6 +4,7 @@ from typing import Optional, List
 from datetime import datetime
 from database import SessionLocal
 from models import WeatherData
+from predict import load_model, load_forecast_data, create_forecast_features, predict_temperature
 
 # ─────────────────────────────────────────
 # Create the FastAPI app
@@ -32,6 +33,11 @@ class WeatherResponse(BaseModel):
     source              : str
 
 
+class PredictionResponse(BaseModel):
+    time                    : datetime
+    actual_temperature_c    : float
+    predicted_temperature_c : float
+    difference_c            : float
 
 # ─────────────────────────────────────────
 # Route 1 — Health check
@@ -141,5 +147,45 @@ def trigger_pipeline():
         from pipeline import run_pipeline
         run_pipeline()
         return {"status": "success", "message": "Pipeline ran successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+# ─────────────────────────────────────────
+# Route 7 — Get ML temperature predictions
+# ─────────────────────────────────────────
+@app.get("/predict", response_model=List[PredictionResponse])
+def get_predictions():
+    """
+    Loads the trained ML model and returns temperature
+    predictions for all forecast hours in the database.
+    """
+    try:
+        # load model
+        model, feature_columns = load_model()
+
+        # load forecast data from DB
+        df_forecast = load_forecast_data()
+
+        if df_forecast.empty:
+            raise HTTPException(
+                status_code=404,
+                detail="No forecast data found in database. Run pipeline first."
+            )
+
+        # create features
+        df_featured = create_forecast_features(df_forecast)
+
+        # predict
+        results = predict_temperature(model, feature_columns, df_featured)
+
+        # convert to list of dicts for FastAPI to return
+        return results.to_dict(orient="records")
+
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Model file ml_model.pkl not found. Run train.py first."
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
