@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, Float, String, DateTime
 from sqlalchemy.orm import declarative_base
 
-Base = declarative_base()   # ← this line is missing in your file
+Base = declarative_base() 
 
 class WeatherData(Base):
     __tablename__ = "weather_data"
